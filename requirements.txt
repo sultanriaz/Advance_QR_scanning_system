@@ -1,0 +1,6 @@
+flask
+opencv-python
+pyzbar
+validators
+tldextract
+requests
