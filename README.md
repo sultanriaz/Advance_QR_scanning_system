@@ -1,192 +1,79 @@
-Secure QR Reputation Analyzer
+# Secure QR Reputation Analyzer & Malicious URL Detection Engine
 
-Real-time QR code scanner with URL security analysis, heuristic risk scoring, and a reputation-based decision engine.
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Security](https://img.shields.io/badge/Domain-Cybersecurity-DC2626?style=for-the-badge)
 
-📌 Project Overview
+A security utility designed to inspect, decode, and evaluate QR codes in real time. Beyond standard payload decoding, the system executes heuristic URL vulnerability checks (punycode, entropy, IP literal spoofing) and maintains an audited scan history.
 
-Secure QR Reputation Analyzer is a computer vision + web application that:
+---
 
-Scans QR codes in real time using your webcam
+## 🏛️ Pipeline Architecture
 
-Detects whether QR payload is a URL or plain text
+```mermaid
+flowchart TD
+    ScanInput["QR Code Image / Video Frame"] --> CVEngine["OpenCV QRCodeDetector"]
+    CVEngine --> Payload["Decoded Payload (Raw String / URL)"]
+    Payload --> Router{"Payload Type"}
+    Router -->|Plain Text| SafeDisplay["Text Display & Copy"]
+    Router -->|URL Structure| Heuristics["Security Heuristics Engine (heuristics.py)"]
+    Heuristics --> Entropy["Shannon Entropy Calculation"]
+    Heuristics --> Protocol["Protocol Verification (HTTPS vs HTTP)"]
+    Heuristics --> Punycode["Punycode / Homograph Attack Detection"]
+    Heuristics --> IPCheck["IP Literal & Port Obfuscation Check"]
+    Heuristics --> RepEngine["Reputation Engine (reputation.py)"]
+    RepEngine --> Whitelist{"Whitelist Check"}
+    Whitelist -->|Match| Trusted["Status: Trusted Safe"]
+    Whitelist -->|No Match| Blacklist{"Blacklist Check"}
+    Blacklist -->|Match| Malicious["Status: Flagged Malicious"]
+    Blacklist -->|No Match| HeuristicScore["Aggregate Risk Scoring"]
+    HeuristicScore --> AuditDB[("SQLite Scan Audit History")]
+    AuditDB --> WebUI["Flask Web Interface Banner"]
+```
 
-Performs security analysis on extracted URLs
+---
 
-Classifies links as SAFE / SUSPICIOUS / DANGEROUS
+## 🔬 Core Features
 
-Stores scan history in SQLite database
+- **Computer Vision QR Decoding:** Uses OpenCV's native `QRCodeDetector` for fast frame analysis.
+- **Deep Heuristic Risk Scoring:**
+  - Evaluates URL string Shannon entropy to catch obfuscated subdomains.
+  - Detects Unicode homograph attacks and punycode strings (`xn--`).
+  - Flags raw IP hostnames, non-standard web ports, and excessive subdomain nesting.
+- **Reputation Filtering:** Verifies domains against local whitelist and known-malicious blacklist corpora.
+- **Persistent Scan History:** Records every scan timestamp, URL payload, risk score, and verdict in SQLite.
 
-Displays results via an interactive Flask UI
+---
 
-This project simulates a lightweight URL threat detection & reputation system.
+## 📁 Repository Structure
 
-🚀 Key Features
-🔍 QR Code Detection
+```
+Advance_QR_scanning_system/
+├── app.py                     # Flask web server and API endpoints
+├── heuristics.py              # URL security analysis and entropy scoring
+├── reputation.py              # Whitelist/blacklist domain matching
+├── QR_codes_generators.py     # Synthetic test QR generator
+├── whitelist.txt              # Known trusted domains
+├── blacklist.txt              # Known malicious domains
+└── requirements.txt           # Python dependency specification
+```
 
-Real-time webcam scanning via OpenCV
+---
 
-Bounding box overlay on detected QR codes
+## 🚀 Quickstart
 
-🌐 URL Processing
-
-URL validation
-
-URL normalization
-
-Domain extraction
-
-🛡️ Heuristic Security Checks
-
-HTTPS detection
-
-URL length analysis
-
-Suspicious keyword detection
-
-IP-based URL detection
-
-Shortener detection
-
-📊 Reputation Engine
-
-Whitelist lookup
-
-Blacklist lookup
-
-Layered trust model
-
-🧠 Decision Engine
-
-Aggregated risk scoring
-
-Deterministic classification:
-
-SAFE
-
-SUSPICIOUS
-
-DANGEROUS
-
-Confidence score calculation
-
-💾 Persistence & Logging
-
-SQLite database storage
-
-Timestamped scan history
-
-Logging system
-
-🖥️ Flask Web Interface
-
-Live video stream
-
-Risk badge & confidence indicator
-
-Warning banner for dangerous links
-
-Action buttons:
-
-Open link
-
-Copy URL
-
-Ignore scan
-
-Recent scan history table
-
-🧱 Tech Stack
-Layer	Technology
-Backend	Python, Flask
-Computer Vision	OpenCV
-Security Logic	Custom heuristics
-URL Handling	validators, urllib.parse
-Domain Extraction	tldextract
-Database	SQLite
-Frontend	HTML, CSS, JavaScript
-⚙️ System Architecture
-Webcam → OpenCV QR Detection
-        → Payload Decode
-        → URL Validation
-        → Normalization
-        → Domain Extraction
-        → Reputation Engine
-        → Heuristic Analysis
-        → Decision Engine
-        → SQLite Persistence
-        → Flask UI Rendering
-
-📂 Project Structure
-SecureQRAnalyzer/
-│
-├── app.py
-├── heuristics.py
-├── reputation.py
-├── blacklist.txt
-├── whitelist.txt
-├── scans.db
-├── requirements.txt
-│
-├── templates/
-│     └── index.html
-│
-└── static/
-      └── style.css
-
-▶️ How to Run
-1️⃣ Create virtual environment (optional)
+```bash
+git clone https://github.com/sultanriaz/Advance_QR_scanning_system.git
+cd Advance_QR_scanning_system
 python -m venv venv
-venv\Scripts\activate   # Windows
-source venv/bin/activate  # Linux/Mac
+# Linux / macOS:
+source venv/bin/activate
+# Windows:
+.\venv\Scripts\Activate.ps1
 
-2️⃣ Install dependencies
 pip install -r requirements.txt
-
-3️⃣ Run the application
 python app.py
-
-4️⃣ Open in browser
-http://127.0.0.1:5000
-
-🗄️ Data Storage
-
-SQLite Database: Stores scan history locally
-
-Blacklist / Whitelist: Local domain reputation lists
-
-No external data transmission
-
-🎯 Use Cases
-
-QR security analysis simulation
-
-URL threat detection demo
-
-Computer vision + Flask integration example
-
-Educational cybersecurity project
-
-Portfolio / academic showcase
-
-📈 Future Improvements
-
-Cloud database integration
-
-Online reputation API
-
-Multi-user authentication
-
-Machine learning threat classifier
-
-File/image QR scanning
-
-REST API for external systems
-
-👨‍💻 Author
-
-Sultan
-BS Computer Science Student
-
-📜 License
-
-This project is for educational and portfolio purposes.
+```
+Open [http://localhost:5000](http://localhost:5000) to scan and evaluate QR payloads.
